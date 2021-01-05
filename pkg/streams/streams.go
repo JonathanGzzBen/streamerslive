@@ -12,14 +12,15 @@ import (
 )
 
 const (
-	youTubeDomain = "https://www.youtube.com"
-	twitchDomain  = "https://www.twitch.tv"
+	youTubeDomain = "www.youtube.com"
+	twitchDomain  = "www.twitch.tv"
 )
 
 // Stream represents a YouTube or Twitch stream
 type Stream struct {
-	Title string
-	URL   string
+	Title       string
+	URL         string
+	ChannelName string
 }
 
 var (
@@ -70,9 +71,9 @@ func NewStreamsClient(twitchAPICredentials TwitchAPICredentials) *Client {
 
 // GetActiveStream returns a channel's active stream
 func (sc *Client) GetActiveStream(channelURL string) (*Stream, error) {
-	if strings.HasPrefix(channelURL, youTubeDomain) {
+	if strings.HasPrefix(channelURL, "https://"+youTubeDomain) {
 		return getActiveYoutubeStream(channelURL)
-	} else if strings.HasPrefix(channelURL, twitchDomain) {
+	} else if strings.HasPrefix(channelURL, "https://"+twitchDomain) {
 		return getActiveTwitchStream(
 			channelURL,
 			sc.twitchAPICredentials,
@@ -83,7 +84,7 @@ func (sc *Client) GetActiveStream(channelURL string) (*Stream, error) {
 
 func getActiveYoutubeStream(channelURL string) (*Stream, error) {
 	c := colly.NewCollector(
-		colly.AllowedDomains(youTubeDomain),
+		colly.AllowedDomains("www.youtube.com"),
 	)
 
 	channelIsStreaming := false
@@ -112,7 +113,7 @@ func getActiveYoutubeStream(channelURL string) (*Stream, error) {
 }
 
 func getActiveTwitchStream(channelURL string, twitchCredentials TwitchAPICredentials) (*Stream, error) {
-	channelName := strings.TrimLeft(channelURL, twitchDomain+"/")
+	channelName := strings.TrimLeft(channelURL, "https://"+twitchDomain+"/")
 	if strings.Contains(channelName, "/") || len(channelName) <= 0 {
 		return nil, ErrInvalidURL
 	}
@@ -136,7 +137,8 @@ func getActiveTwitchStream(channelURL string, twitchCredentials TwitchAPICredent
 	}
 
 	return &Stream{
-		Title: sr.Data[0].Title,
-		URL:   channelURL,
+		Title:       sr.Data[0].Title,
+		URL:         channelURL,
+		ChannelName: sr.Data[0].DisplayName,
 	}, nil
 }
