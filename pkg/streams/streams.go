@@ -96,9 +96,9 @@ func getActiveYoutubeStream(channelURL string) (*Stream, error) {
 	})
 
 	streamTitle := ""
-	c.OnHTML("title", func(e *colly.HTMLElement) {
+	c.OnHTML(`meta[name="title"]`, func(e *colly.HTMLElement) {
 		if channelIsStreaming {
-			streamTitle = strings.TrimSpace(strings.TrimSuffix(e.Text, "- YouTube"))
+			streamTitle = e.Attr("content")
 		}
 	})
 
