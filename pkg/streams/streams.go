@@ -69,12 +69,12 @@ func NewStreamsClient(twitchAPICredentials TwitchAPICredentials) *Client {
 	}
 }
 
-// GetActiveStream returns a channel's active stream
-func (sc *Client) GetActiveStream(channelURL string) (*Stream, error) {
+// ActiveStream returns a channel's active stream
+func (sc *Client) ActiveStream(channelURL string) (*Stream, error) {
 	if strings.HasPrefix(channelURL, "https://"+youTubeDomain) {
-		return getActiveYoutubeStream(channelURL)
+		return activeYoutubeStream(channelURL)
 	} else if strings.HasPrefix(channelURL, "https://"+twitchDomain) {
-		return getActiveTwitchStream(
+		return activeTwitchStream(
 			channelURL,
 			sc.twitchAPICredentials,
 		)
@@ -82,7 +82,7 @@ func (sc *Client) GetActiveStream(channelURL string) (*Stream, error) {
 	return nil, errors.New("not valid URL")
 }
 
-func getActiveYoutubeStream(channelURL string) (*Stream, error) {
+func activeYoutubeStream(channelURL string) (*Stream, error) {
 	c := colly.NewCollector(
 		colly.AllowedDomains(youTubeDomain),
 	)
@@ -109,11 +109,11 @@ func getActiveYoutubeStream(channelURL string) (*Stream, error) {
 		return nil, ErrStreamNotActive
 	}
 	stream.Title = streamTitle
-	stream.ChannelName, _ = getYoutubeChannelName(channelURL)
+	stream.ChannelName, _ = youtubeChannelName(channelURL)
 	return stream, nil
 }
 
-func getYoutubeChannelName(channelURL string) (string, error) {
+func youtubeChannelName(channelURL string) (string, error) {
 	c := colly.NewCollector(
 		colly.AllowedDomains(youTubeDomain),
 	)
@@ -126,17 +126,23 @@ func getYoutubeChannelName(channelURL string) (string, error) {
 	return channelName, nil
 }
 
-func getActiveTwitchStream(channelURL string, twitchCredentials TwitchAPICredentials) (*Stream, error) {
+func activeTwitchStream(channelURL string, twitchCredentials TwitchAPICredentials) (*Stream, error) {
 	channelName := strings.TrimLeft(channelURL, "https://"+twitchDomain+"/")
 	if strings.Contains(channelName, "/") || len(channelName) <= 0 {
 		return nil, ErrInvalidURL
 	}
-	req, _ := http.NewRequest("GET", "https://api.twitch.tv/helix/search/channels?query="+channelName, nil)
+	req, err := http.NewRequest("GET", "https://api.twitch.tv/helix/search/channels?query="+channelName, nil)
+	if err != nil {
+		return nil, ErrInvalidURL
+	}
 	req.Header.Set("Authorization", "Bearer "+twitchCredentials.AppAccessToken)
 	req.Header.Set("Client-Id", twitchCredentials.ClientID)
-	res, _ := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
 	if res.StatusCode == 401 {
 		return nil, ErrInvalidTwitchAPICredentials
+	}
+	if err != nil {
+		return nil, err
 	}
 	body, _ := ioutil.ReadAll(res.Body)
 	sr := twitchAPISearchResponse{}
