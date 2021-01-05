@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"sync"
-	"text/tabwriter"
 	"time"
 
 	"github.com/JonathanGzzBen/streamerslive/pkg/streams"
@@ -21,10 +20,9 @@ var rootCmd = &cobra.Command{
 	Short: "StreamersLive is a tool to check livestreams",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, '.', tabwriter.AlignRight|tabwriter.Debug)
 		asc := activeStreamsChan(args...)
 		for as := range asc {
-			fmt.Fprintf(w, "%v\t%v\t%v\n", as.ChannelName, as.Title, as.URL)
+			fmt.Println(as.ChannelName, as.Title, as.URL)
 		}
 		return
 	},
