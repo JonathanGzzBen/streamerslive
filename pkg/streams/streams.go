@@ -84,7 +84,7 @@ func (sc *Client) GetActiveStream(channelURL string) (*Stream, error) {
 
 func getActiveYoutubeStream(channelURL string) (*Stream, error) {
 	c := colly.NewCollector(
-		colly.AllowedDomains("www.youtube.com"),
+		colly.AllowedDomains(youTubeDomain),
 	)
 
 	channelIsStreaming := false
@@ -109,7 +109,21 @@ func getActiveYoutubeStream(channelURL string) (*Stream, error) {
 		return nil, ErrStreamNotActive
 	}
 	stream.Title = streamTitle
+	stream.ChannelName, _ = getYoutubeChannelName(channelURL)
 	return stream, nil
+}
+
+func getYoutubeChannelName(channelURL string) (string, error) {
+	c := colly.NewCollector(
+		colly.AllowedDomains(youTubeDomain),
+	)
+
+	channelName := ""
+	c.OnHTML(`link[itemprop="name"]`, func(e *colly.HTMLElement) {
+		channelName = e.Attr("content")
+	})
+	c.Visit(channelURL)
+	return channelName, nil
 }
 
 func getActiveTwitchStream(channelURL string, twitchCredentials TwitchAPICredentials) (*Stream, error) {
