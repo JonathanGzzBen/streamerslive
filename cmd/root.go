@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/JonathanGzzBen/streamerslive/pkg/streams"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -20,11 +21,13 @@ var rootCmd = &cobra.Command{
 	Short: "StreamersLive is a tool to check livestreams",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"Channel Name", "Stream Title", "Stream URL"})
 		asc := activeStreamsChan(args...)
 		for as := range asc {
-			fmt.Println(as.ChannelName, as.Title, as.URL)
+			table.Append([]string{as.ChannelName, as.Title, as.URL})
 		}
-		return
+		table.Render()
 	},
 }
 
