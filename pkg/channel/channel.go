@@ -134,10 +134,6 @@ func twitchChannel(url string, twitchCredentials TwitchAPICredentials) (*Channel
 		return nil, ErrInvalidURL
 	}
 
-	if !sr.Data[0].IsLive {
-		return nil, ErrStreamNotActive
-	}
-
 	return &Channel{
 		Name: sr.Data[0].DisplayName,
 		URL:  url,
