@@ -17,9 +17,6 @@ const (
 )
 
 var (
-	// ErrStreamNotActive is the error thrown if looking
-	// for information of a stream that is not active
-	ErrStreamNotActive = errors.New("channel is not streaming")
 	// ErrInvalidTwitchAPICredentials is the error thrown
 	// when provided invalid Twitch API credentials
 	ErrInvalidTwitchAPICredentials = errors.New("invalid Twitch API credentials")
