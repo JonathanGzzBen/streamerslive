@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -174,4 +175,14 @@ func activeYouTubeStream(channelURL string) (*Stream, error) {
 	}
 	stream.Title = streamTitle
 	return stream, nil
+}
+
+// SortByName returns an array of channels sorted by name
+func SortByName(cs []Channel) []Channel {
+	sort.Slice(cs, func(i, j int) bool {
+		return strings.Compare(
+			strings.ToLower(cs[i].Name),
+			strings.ToLower(cs[j].Name)) < 0
+	})
+	return cs
 }
