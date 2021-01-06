@@ -1,4 +1,4 @@
-package streams
+package channel
 
 import (
 	"encoding/json"
@@ -16,13 +16,6 @@ const (
 	twitchDomain  = "www.twitch.tv"
 )
 
-// Stream represents a YouTube or Twitch stream
-type Stream struct {
-	Title       string
-	URL         string
-	ChannelName string
-}
-
 var (
 	// ErrStreamNotActive is the error thrown if looking
 	// for information of a stream that is not active
@@ -33,6 +26,20 @@ var (
 	// ErrInvalidURL is the error thrown when URL is invalid
 	ErrInvalidURL = errors.New("channel not found")
 )
+
+// Channel represents a Youtube or Twitch channel
+type Channel struct {
+	URL  string
+	Name string
+	// Stream is nil when channel is not streaming
+	Stream Stream
+}
+
+// Stream represents a YouTube or Twitch stream
+type Stream struct {
+	Title string
+	URL   string
+}
 
 type twitchAPISearchResponse struct {
 	Data []struct {
@@ -50,8 +57,8 @@ type twitchAPISearchResponse struct {
 	} `json:"pagination"`
 }
 
-// Client provides the client instance to get streams info
-type Client struct {
+// ChannelsClient provides the client instance to get streams info
+type ChannelsClient struct {
 	twitchAPICredentials TwitchAPICredentials
 }
 
@@ -62,58 +69,24 @@ type TwitchAPICredentials struct {
 	AppAccessToken string
 }
 
-// NewStreamsClient creates a new StreamsClient instance with provided credentials
-func NewStreamsClient(twitchAPICredentials TwitchAPICredentials) *Client {
-	return &Client{
+// NewChannelsClient creates a new StreamsClient instance with provided credentials
+func NewChannelsClient(twitchAPICredentials TwitchAPICredentials) *ChannelsClient {
+	return &ChannelsClient{
 		twitchAPICredentials: twitchAPICredentials,
 	}
 }
 
-// ActiveStream returns a channel's active stream
-func (sc *Client) ActiveStream(channelURL string) (*Stream, error) {
-	if strings.HasPrefix(channelURL, "https://"+youTubeDomain) {
-		return activeYoutubeStream(channelURL)
-	} else if strings.HasPrefix(channelURL, "https://"+twitchDomain) {
-		return activeTwitchStream(
-			channelURL,
-			sc.twitchAPICredentials,
-		)
+// ChannelFromURL fetches a channel's information
+func (cc *ChannelsClient) ChannelFromURL(url string) (*Channel, error) {
+	if strings.HasPrefix(url, "https://"+youTubeDomain) {
+		return youtubeChannel(url)
+	} else if strings.HasPrefix(url, "https://"+twitchDomain) {
+		return twitchChannel(url, cc.twitchAPICredentials)
 	}
-	return nil, errors.New("not valid URL")
+	return nil, ErrInvalidURL
 }
 
-func activeYoutubeStream(channelURL string) (*Stream, error) {
-	c := colly.NewCollector(
-		colly.AllowedDomains(youTubeDomain),
-	)
-
-	channelIsStreaming := false
-	// If page has player element, channel is streaming.
-	c.OnHTML("#player", func(e *colly.HTMLElement) {
-		if e != nil {
-			channelIsStreaming = true
-		}
-	})
-
-	streamTitle := ""
-	c.OnHTML(`meta[name="title"]`, func(e *colly.HTMLElement) {
-		if channelIsStreaming {
-			streamTitle = e.Attr("content")
-		}
-	})
-
-	stream := &Stream{}
-	stream.URL = channelURL + "/live"
-	c.Visit(stream.URL)
-	if !channelIsStreaming {
-		return nil, ErrStreamNotActive
-	}
-	stream.Title = streamTitle
-	stream.ChannelName, _ = youtubeChannelName(channelURL)
-	return stream, nil
-}
-
-func youtubeChannelName(channelURL string) (string, error) {
+func youtubeChannel(url string) (*Channel, error) {
 	c := colly.NewCollector(
 		colly.AllowedDomains(youTubeDomain),
 	)
@@ -122,12 +95,24 @@ func youtubeChannelName(channelURL string) (string, error) {
 	c.OnHTML(`link[itemprop="name"]`, func(e *colly.HTMLElement) {
 		channelName = e.Attr("content")
 	})
-	c.Visit(channelURL)
-	return channelName, nil
+	c.Visit(url)
+
+	as, err := activeYouTubeStream(url)
+	if err != nil {
+		return nil, err
+	}
+	channel := &Channel{
+		URL:  url,
+		Name: channelName,
+	}
+	if as != nil {
+		channel.Stream = *as
+	}
+	return channel, nil
 }
 
-func activeTwitchStream(channelURL string, twitchCredentials TwitchAPICredentials) (*Stream, error) {
-	channelName := strings.TrimLeft(channelURL, "https://"+twitchDomain+"/")
+func twitchChannel(url string, twitchCredentials TwitchAPICredentials) (*Channel, error) {
+	channelName := strings.TrimLeft(url, "https://"+twitchDomain+"/")
 	if strings.Contains(channelName, "/") || len(channelName) <= 0 {
 		return nil, ErrInvalidURL
 	}
@@ -156,9 +141,44 @@ func activeTwitchStream(channelURL string, twitchCredentials TwitchAPICredential
 		return nil, ErrStreamNotActive
 	}
 
-	return &Stream{
-		Title:       sr.Data[0].Title,
-		URL:         channelURL,
-		ChannelName: sr.Data[0].DisplayName,
+	return &Channel{
+		Name: sr.Data[0].DisplayName,
+		URL:  url,
+		Stream: Stream{
+			URL:   url,
+			Title: sr.Data[0].Title,
+		},
 	}, nil
+}
+
+// activeYoutubeStream fetches a channel's active stream,
+// returns nil if channel is not streaming
+func activeYouTubeStream(channelURL string) (*Stream, error) {
+	c := colly.NewCollector(
+		colly.AllowedDomains(youTubeDomain),
+	)
+
+	channelIsStreaming := false
+	// If page has player element, channel is streaming.
+	c.OnHTML("#player", func(e *colly.HTMLElement) {
+		if e != nil {
+			channelIsStreaming = true
+		}
+	})
+
+	streamTitle := ""
+	c.OnHTML(`meta[name="title"]`, func(e *colly.HTMLElement) {
+		if channelIsStreaming {
+			streamTitle = e.Attr("content")
+		}
+	})
+
+	stream := &Stream{}
+	stream.URL = channelURL + "/live"
+	c.Visit(stream.URL)
+	if !channelIsStreaming {
+		return nil, nil
+	}
+	stream.Title = streamTitle
+	return stream, nil
 }

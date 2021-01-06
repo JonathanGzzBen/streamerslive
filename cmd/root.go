@@ -6,12 +6,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/JonathanGzzBen/streamerslive/pkg/streams"
+	"github.com/JonathanGzzBen/streamerslive/pkg/channel"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
-var twitchAPICredentials streams.TwitchAPICredentials = streams.TwitchAPICredentials{
+// Execute executes the root command
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+var twitchAPICredentials channel.TwitchAPICredentials = channel.TwitchAPICredentials{
 	AppAccessToken: "xcqpzgp6lw4araarzpkm0z9gbfgbjo",
 	ClientID:       "i9jknyofth9p7zuzkbyxogdglbr9x4",
 }
@@ -23,40 +31,33 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		table := tablewriter.NewWriter(os.Stdout)
 		table.SetHeader([]string{"Channel Name", "Stream Title", "Stream URL"})
-		asc := activeStreamsChan(args...)
-		for as := range asc {
-			table.Append([]string{as.ChannelName, as.Title, as.URL})
+		cchan := channelsChan(args...)
+		for c := range cchan {
+			table.Append([]string{c.Name, c.Stream.Title, c.Stream.URL})
 		}
 		table.Render()
 	},
 }
 
-func activeStreamsChan(channelsURLs ...string) chan streams.Stream {
-	asc := make(chan streams.Stream)
+func channelsChan(channelURLs ...string) chan channel.Channel {
+	cchan := make(chan channel.Channel)
 	go func() {
-		sc := streams.NewStreamsClient(twitchAPICredentials)
+		cclient := channel.NewChannelsClient(channel.TwitchAPICredentials(twitchAPICredentials))
+
 		var wg sync.WaitGroup
-		wg.Add(len(channelsURLs))
-		for _, cu := range channelsURLs {
-			go func(cu string) {
-				stream, err := sc.ActiveStream(cu)
+		wg.Add(len(channelURLs))
+		for _, url := range channelURLs {
+			go func(url string) {
+				channel, err := cclient.ChannelFromURL(url)
 				if err == nil {
-					asc <- *stream
+					cchan <- *channel
 				}
 				wg.Done()
-			}(cu)
+			}(url)
 			time.Sleep(2 * time.Millisecond)
 		}
 		wg.Wait()
-		close(asc)
+		close(cchan)
 	}()
-	return asc
-}
-
-// Execute executes the root command
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+	return cchan
 }
