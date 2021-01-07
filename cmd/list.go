@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/JonathanGzzBen/streamerslive/pkg/channel"
+	"github.com/JonathanGzzBen/streamerslive"
 	"github.com/JonathanGzzBen/streamerslive/pkg/storage"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -17,10 +17,10 @@ import (
 // ChannelListElement is a Channel displayed by list command
 type ChannelListElement struct {
 	ID      int
-	Channel channel.Channel
+	Channel streamerslive.Channel
 }
 
-var twitchAPICredentials channel.TwitchAPICredentials = channel.TwitchAPICredentials{
+var twitchAPICredentials streamerslive.TwitchAPICredentials = streamerslive.TwitchAPICredentials{
 	AppAccessToken: "xcqpzgp6lw4araarzpkm0z9gbfgbjo",
 	ClientID:       "i9jknyofth9p7zuzkbyxogdglbr9x4",
 }
@@ -46,10 +46,10 @@ func init() {
 }
 
 // channelsChan retrieves channels data
-func channelsChan(channelURLs ...string) chan channel.Channel {
-	cchan := make(chan channel.Channel)
+func channelsChan(channelURLs ...string) chan streamerslive.Channel {
+	cchan := make(chan streamerslive.Channel)
 	go func() {
-		cclient := channel.NewChannelsClient(channel.TwitchAPICredentials(twitchAPICredentials))
+		cclient := streamerslive.NewChannelsClient(streamerslive.TwitchAPICredentials(twitchAPICredentials))
 		var wg sync.WaitGroup
 		wg.Add(len(channelURLs))
 		for _, url := range channelURLs {
@@ -69,14 +69,14 @@ func channelsChan(channelURLs ...string) chan channel.Channel {
 }
 
 // channelsListElementsByName sorts channels by name and returns channel list elements
-func channelsListElementsByName(cChan <-chan channel.Channel) <-chan ChannelListElement {
+func channelsListElementsByName(cChan <-chan streamerslive.Channel) <-chan ChannelListElement {
 	cleChan := make(chan ChannelListElement)
 	go func() {
-		channels := make([]channel.Channel, 0)
+		channels := make([]streamerslive.Channel, 0)
 		for c := range cChan {
 			channels = append(channels, c)
 		}
-		channels = channel.SortByName(channels)
+		channels = streamerslive.SortByName(channels)
 		id := int64(1)
 		for _, c := range channels {
 			cleChan <- ChannelListElement{

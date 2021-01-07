@@ -1,4 +1,4 @@
-package channel
+package streamerslive
 
 import (
 	"encoding/json"
