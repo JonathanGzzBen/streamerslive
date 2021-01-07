@@ -30,7 +30,7 @@ type Channel struct {
 	URL  string
 	Name string
 	// Stream is nil when channel is not streaming
-	Stream Stream
+	Stream *Stream
 }
 
 // Stream represents a YouTube or Twitch stream
@@ -104,7 +104,7 @@ func youtubeChannel(url string) (*Channel, error) {
 		Name: channelName,
 	}
 	if as != nil {
-		channel.Stream = *as
+		channel.Stream = as
 	}
 	return channel, nil
 }
@@ -135,13 +135,20 @@ func twitchChannel(url string, twitchCredentials TwitchAPICredentials) (*Channel
 		return nil, ErrInvalidURL
 	}
 
-	return &Channel{
-		Name: sr.Data[0].DisplayName,
-		URL:  url,
-		Stream: Stream{
+	stream := &Stream{}
+	if sr.Data[0].IsLive {
+		stream = &Stream{
 			URL:   url,
 			Title: sr.Data[0].Title,
-		},
+		}
+	} else {
+		stream = nil
+	}
+
+	return &Channel{
+		Name:   sr.Data[0].DisplayName,
+		URL:    url,
+		Stream: stream,
 	}, nil
 }
 

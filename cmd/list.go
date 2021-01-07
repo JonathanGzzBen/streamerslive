@@ -30,7 +30,11 @@ var listCmd = &cobra.Command{
 		channels = channel.SortByName(channels)
 		id := 1
 		for _, c := range channels {
-			table.Append([]string{strconv.Itoa(id), c.Name, c.Stream.Title, c.Stream.URL})
+			if c.Stream != nil {
+				table.Append([]string{strconv.Itoa(id), c.Name, c.Stream.Title, c.Stream.URL})
+			} else {
+				table.Append([]string{strconv.Itoa(id), c.Name})
+			}
 			id++
 		}
 		table.Render()
