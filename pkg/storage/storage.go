@@ -37,3 +37,24 @@ func AddChannelURL(channelURL string) error {
 	_, err = f.Write([]byte(channelURL + "\n"))
 	return err
 }
+
+// RemoveChannelURL removes a channel URL from storage
+func RemoveChannelURL(channelURL string) error {
+	dat, err := ioutil.ReadFile(channelURLsFilename)
+	if err != nil {
+		return err
+	}
+	urlsToStore := make([]string, 0)
+	scanner := bufio.NewScanner(strings.NewReader(string(dat)))
+	for scanner.Scan() {
+		if scanner.Text() != channelURL {
+			urlsToStore = append(urlsToStore, scanner.Text())
+		}
+	}
+
+	os.Remove(channelURLsFilename)
+	for _, url := range urlsToStore {
+		AddChannelURL(url)
+	}
+	return nil
+}
