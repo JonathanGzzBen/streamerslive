@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/JonathanGzzBen/streamerslive/pkg/channel"
 	"github.com/JonathanGzzBen/streamerslive/pkg/storage"
@@ -20,15 +21,17 @@ var listCmd = &cobra.Command{
 			return
 		}
 		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Channel Name", "Stream Title", "Stream URL"})
+		table.SetHeader([]string{"Id", "Channel Name", "Stream Title", "Stream URL"})
 		channels := make([]channel.Channel, 0)
 		cchan := channelsChan(cURLs...)
 		for c := range cchan {
 			channels = append(channels, c)
 		}
 		channels = channel.SortByName(channels)
+		id := 1
 		for _, c := range channels {
-			table.Append([]string{c.Name, c.Stream.Title, c.Stream.URL})
+			table.Append([]string{strconv.Itoa(id), c.Name, c.Stream.Title, c.Stream.URL})
+			id++
 		}
 		table.Render()
 	},
