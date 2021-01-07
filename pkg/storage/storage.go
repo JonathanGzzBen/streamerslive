@@ -14,7 +14,9 @@ type ChannelURLsStorage struct {
 
 // DefaultStorageFilename returns the default location for storing
 // channel URLs.
+//
 // On UNIX and MacOS, it's $HOME/.streamerslive
+//
 // On Windows, it's %USERPROFILE%/.streamerslive
 func DefaultStorageFilename() string {
 	uhd, _ := os.UserHomeDir()
