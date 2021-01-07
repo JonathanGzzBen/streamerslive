@@ -82,12 +82,20 @@ func channelsListElementsByName(cChan <-chan channel.Channel) <-chan ChannelList
 
 func printChannelsList(cleChan <-chan ChannelListElement) {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Channel Name", "Stream Title", "Stream URL"})
+	table.SetHeader([]string{"Id", "Channel", "Stream Title"})
 	for cle := range cleChan {
 		if cle.Channel.Stream != nil {
-			table.Append([]string{strconv.Itoa(cle.ID), cle.Channel.Name, cle.Channel.Stream.Title, cle.Channel.Stream.URL})
+			table.Append([]string{
+				strconv.Itoa(cle.ID),
+				cle.Channel.Name,
+				cle.Channel.Stream.Title,
+			})
 		} else {
-			table.Append([]string{strconv.Itoa(cle.ID), cle.Channel.Name})
+			table.Append([]string{
+				strconv.Itoa(cle.ID),
+				cle.Channel.Name,
+				"",
+			})
 		}
 	}
 	table.Render()
