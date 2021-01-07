@@ -20,6 +20,11 @@ type ChannelListElement struct {
 	Channel channel.Channel
 }
 
+var twitchAPICredentials channel.TwitchAPICredentials = channel.TwitchAPICredentials{
+	AppAccessToken: "xcqpzgp6lw4araarzpkm0z9gbfgbjo",
+	ClientID:       "i9jknyofth9p7zuzkbyxogdglbr9x4",
+}
+
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "displays saved streaming channels",
