@@ -29,16 +29,7 @@ var listCmd = &cobra.Command{
 			fmt.Fprintln(os.Stderr, `No channels stored. Use command "add" to store a channel`)
 			return
 		}
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Id", "Channel Name", "Stream Title", "Stream URL"})
-		for cle := range channelsListElementsByName(channelsChan(cURLs...)) {
-			if cle.Channel.Stream != nil {
-				table.Append([]string{strconv.Itoa(cle.ID), cle.Channel.Name, cle.Channel.Stream.Title, cle.Channel.Stream.URL})
-			} else {
-				table.Append([]string{strconv.Itoa(cle.ID), cle.Channel.Name})
-			}
-		}
-		table.Render()
+		printChannelsList(channelsListElementsByName(channelsChan(cURLs...)))
 	},
 }
 
@@ -87,4 +78,17 @@ func channelsListElementsByName(cChan <-chan channel.Channel) <-chan ChannelList
 		close(cleChan)
 	}()
 	return cleChan
+}
+
+func printChannelsList(cleChan <-chan ChannelListElement) {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Id", "Channel Name", "Stream Title", "Stream URL"})
+	for cle := range cleChan {
+		if cle.Channel.Stream != nil {
+			table.Append([]string{strconv.Itoa(cle.ID), cle.Channel.Name, cle.Channel.Stream.Title, cle.Channel.Stream.URL})
+		} else {
+			table.Append([]string{strconv.Itoa(cle.ID), cle.Channel.Name})
+		}
+	}
+	table.Render()
 }
