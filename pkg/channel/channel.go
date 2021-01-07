@@ -22,7 +22,7 @@ var (
 	// when provided invalid Twitch API credentials
 	ErrInvalidTwitchAPICredentials = errors.New("invalid Twitch API credentials")
 	// ErrInvalidURL is the error thrown when URL is invalid
-	ErrInvalidURL = errors.New("channel not found")
+	ErrInvalidURL = errors.New("invalid URL")
 )
 
 // Channel represents a Youtube or Twitch channel
