@@ -2,6 +2,10 @@
 
 Command-line tool and Go library to fetch streaming channels from Youtube or Twitch.
 
+## Installation
+
+You can grab a binary from [releases](https://github.com/JonathanGzzBen/streamerslive/releases/tag/v1.0.0).
+
 ## Commands
 
 ### add
