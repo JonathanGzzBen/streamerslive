@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"os"
-	"sync"
-	"time"
 
 	"github.com/JonathanGzzBen/streamerslive/pkg/channel"
 	"github.com/olekukonko/tablewriter"
@@ -32,27 +30,4 @@ var checkCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(checkCmd)
-}
-
-func channelsChan(channelURLs ...string) chan channel.Channel {
-	cchan := make(chan channel.Channel)
-	go func() {
-		cclient := channel.NewChannelsClient(channel.TwitchAPICredentials(twitchAPICredentials))
-
-		var wg sync.WaitGroup
-		wg.Add(len(channelURLs))
-		for _, url := range channelURLs {
-			go func(url string) {
-				channel, err := cclient.ChannelFromURL(url)
-				if err == nil {
-					cchan <- *channel
-				}
-				wg.Done()
-			}(url)
-			time.Sleep(2 * time.Millisecond)
-		}
-		wg.Wait()
-		close(cchan)
-	}()
-	return cchan
 }

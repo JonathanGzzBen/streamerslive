@@ -4,12 +4,21 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/JonathanGzzBen/streamerslive/pkg/channel"
 	"github.com/JonathanGzzBen/streamerslive/pkg/storage"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
+
+// ChannelListElement is a Channel displayed by list command
+type ChannelListElement struct {
+	ID      int
+	Channel channel.Channel
+}
 
 var listCmd = &cobra.Command{
 	Use:   "list",
@@ -22,20 +31,12 @@ var listCmd = &cobra.Command{
 		}
 		table := tablewriter.NewWriter(os.Stdout)
 		table.SetHeader([]string{"Id", "Channel Name", "Stream Title", "Stream URL"})
-		channels := make([]channel.Channel, 0)
-		cchan := channelsChan(cURLs...)
-		for c := range cchan {
-			channels = append(channels, c)
-		}
-		channels = channel.SortByName(channels)
-		id := 1
-		for _, c := range channels {
-			if c.Stream != nil {
-				table.Append([]string{strconv.Itoa(id), c.Name, c.Stream.Title, c.Stream.URL})
+		for cle := range channelsListElementsByName(channelsChan(cURLs...)) {
+			if cle.Channel.Stream != nil {
+				table.Append([]string{strconv.Itoa(cle.ID), cle.Channel.Name, cle.Channel.Stream.Title, cle.Channel.Stream.URL})
 			} else {
-				table.Append([]string{strconv.Itoa(id), c.Name})
+				table.Append([]string{strconv.Itoa(cle.ID), cle.Channel.Name})
 			}
-			id++
 		}
 		table.Render()
 	},
@@ -43,4 +44,47 @@ var listCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(listCmd)
+}
+
+func channelsChan(channelURLs ...string) chan channel.Channel {
+	cchan := make(chan channel.Channel)
+	go func() {
+		cclient := channel.NewChannelsClient(channel.TwitchAPICredentials(twitchAPICredentials))
+		var wg sync.WaitGroup
+		wg.Add(len(channelURLs))
+		for _, url := range channelURLs {
+			go func(url string) {
+				channel, err := cclient.ChannelFromURL(url)
+				if err == nil {
+					cchan <- *channel
+				}
+				wg.Done()
+			}(url)
+			time.Sleep(2 * time.Millisecond)
+		}
+		wg.Wait()
+		close(cchan)
+	}()
+	return cchan
+}
+
+func channelsListElementsByName(cChan <-chan channel.Channel) <-chan ChannelListElement {
+	cleChan := make(chan ChannelListElement)
+	go func() {
+		channels := make([]channel.Channel, 0)
+		for c := range cChan {
+			channels = append(channels, c)
+		}
+		channels = channel.SortByName(channels)
+		id := int64(1)
+		for _, c := range channels {
+			cleChan <- ChannelListElement{
+				ID:      int(atomic.LoadInt64(&id)),
+				Channel: c,
+			}
+			atomic.AddInt64(&id, 1)
+		}
+		close(cleChan)
+	}()
+	return cleChan
 }
