@@ -60,14 +60,14 @@ type ChannelsClient struct {
 	twitchAPICredentials TwitchAPICredentials
 }
 
-// TwitchAPICredentials are required to get info from Twitch streams
-// check https://dev.twitch.tv/docs/authentication
+// TwitchAPICredentials are required to get info from Twitch streams.
+// Check https://dev.twitch.tv/docs/authentication
 type TwitchAPICredentials struct {
 	ClientID       string
 	AppAccessToken string
 }
 
-// NewChannelsClient creates a new StreamsClient instance with provided credentials
+// NewChannelsClient creates a new ChannelsClient instance with provided credentials
 func NewChannelsClient(twitchAPICredentials TwitchAPICredentials) *ChannelsClient {
 	return &ChannelsClient{
 		twitchAPICredentials: twitchAPICredentials,
@@ -184,7 +184,7 @@ func activeYouTubeStream(channelURL string) (*Stream, error) {
 	return stream, nil
 }
 
-// SortByName returns an array of channels sorted by name
+// SortByName returns a slice of channels sorted by name
 func SortByName(cs []Channel) []Channel {
 	sort.Slice(cs, func(i, j int) bool {
 		return strings.Compare(
