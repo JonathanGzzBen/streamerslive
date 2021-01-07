@@ -16,7 +16,7 @@ func init() {
 
 var watchCmd = &cobra.Command{
 	Use:   "watch [channelId]",
-	Short: "opens streaming channel in browser",
+	Short: "Opens streaming channel in browser",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		cURLs, err := storage.ChannelURLs()

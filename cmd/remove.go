@@ -15,7 +15,7 @@ func init() {
 
 var removeCmd = &cobra.Command{
 	Use:   "remove [channelId]",
-	Short: "removes a channel from list",
+	Short: "Removes a channel from list",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		cURLs, err := storage.ChannelURLs()

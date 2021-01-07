@@ -27,7 +27,7 @@ var twitchAPICredentials channel.TwitchAPICredentials = channel.TwitchAPICredent
 
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "displays saved streaming channels",
+	Short: "Displays saved streaming channels",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		cURLs, err := storage.ChannelURLs()

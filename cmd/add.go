@@ -13,7 +13,7 @@ func init() {
 
 var addCmd = &cobra.Command{
 	Use:   "add [channelURLs...]",
-	Short: "adds channels to list",
+	Short: "Adds channels to list",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, url := range args {
