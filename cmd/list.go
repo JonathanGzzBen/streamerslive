@@ -42,6 +42,7 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 }
 
+// channelsChan retrieves channels data
 func channelsChan(channelURLs ...string) chan channel.Channel {
 	cchan := make(chan channel.Channel)
 	go func() {
@@ -64,6 +65,7 @@ func channelsChan(channelURLs ...string) chan channel.Channel {
 	return cchan
 }
 
+// channelsListElementsByName sorts channels by name and returns channel list elements
 func channelsListElementsByName(cChan <-chan channel.Channel) <-chan ChannelListElement {
 	cleChan := make(chan ChannelListElement)
 	go func() {
