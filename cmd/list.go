@@ -25,12 +25,14 @@ var twitchAPICredentials channel.TwitchAPICredentials = channel.TwitchAPICredent
 	ClientID:       "i9jknyofth9p7zuzkbyxogdglbr9x4",
 }
 
+var channelsStorage = storage.NewChannelURLsStorage(storage.DefaultStorageFilename())
+
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Displays saved streaming channels",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		cURLs, err := storage.ChannelURLs()
+		cURLs, err := channelsStorage.ChannelURLs()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, `No channels stored. Use command "add" to store a channel`)
 			return

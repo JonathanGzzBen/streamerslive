@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/JonathanGzzBen/streamerslive/pkg/browser"
-	"github.com/JonathanGzzBen/streamerslive/pkg/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +18,7 @@ var watchCmd = &cobra.Command{
 	Short: "Opens streaming channel in browser",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		cURLs, err := storage.ChannelURLs()
+		cURLs, err := channelsStorage.ChannelURLs()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, `No channels stored. Use command "add" to store a channel`)
 			return

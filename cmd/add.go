@@ -3,7 +3,6 @@ package cmd
 import (
 	"log"
 
-	"github.com/JonathanGzzBen/streamerslive/pkg/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +16,7 @@ var addCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, url := range args {
-			err := storage.AddChannelURL(url)
+			err := channelsStorage.AddChannelURL(url)
 			if err != nil {
 				log.Fatal(err)
 			}

@@ -7,16 +7,31 @@ import (
 	"strings"
 )
 
-var channelURLsFilename string
+// ChannelURLsStorage is used to store ChannelURLs
+type ChannelURLsStorage struct {
+	Filename string
+}
 
-func init() {
+// DefaultStorageFilename returns the default location for storing
+// channel URLs.
+// On UNIX and MacOS, it's $HOME/.streamerslive
+// On Windows, it's %USERPROFILE%/.streamerslive
+func DefaultStorageFilename() string {
 	uhd, _ := os.UserHomeDir()
-	channelURLsFilename = uhd + "/.streamerslive"
+	return uhd + "/.streamerslive"
+}
+
+// NewChannelURLsStorage returns a new ChannelURLsStorage that
+// uses filename to store ChannelURLs.
+func NewChannelURLsStorage(filename string) *ChannelURLsStorage {
+	return &ChannelURLsStorage{
+		Filename: filename,
+	}
 }
 
 // ChannelURLs returns the stored channel URLs
-func ChannelURLs() ([]string, error) {
-	dat, err := ioutil.ReadFile(channelURLsFilename)
+func (cus *ChannelURLsStorage) ChannelURLs() ([]string, error) {
+	dat, err := ioutil.ReadFile(cus.Filename)
 	if err != nil {
 		return nil, err
 	}
@@ -28,9 +43,9 @@ func ChannelURLs() ([]string, error) {
 	return storedURLs, nil
 }
 
-// AddChannelURL stores a channel URL
-func AddChannelURL(channelURL string) error {
-	f, err := os.OpenFile(channelURLsFilename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+// AddChannelURL add a channel URL to storage
+func (cus *ChannelURLsStorage) AddChannelURL(channelURL string) error {
+	f, err := os.OpenFile(cus.Filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -39,8 +54,8 @@ func AddChannelURL(channelURL string) error {
 }
 
 // RemoveChannelURL removes a channel URL from storage
-func RemoveChannelURL(channelURL string) error {
-	dat, err := ioutil.ReadFile(channelURLsFilename)
+func (cus *ChannelURLsStorage) RemoveChannelURL(channelURL string) error {
+	dat, err := ioutil.ReadFile(cus.Filename)
 	if err != nil {
 		return err
 	}
@@ -52,9 +67,9 @@ func RemoveChannelURL(channelURL string) error {
 		}
 	}
 
-	os.Remove(channelURLsFilename)
+	os.Remove(cus.Filename)
 	for _, url := range urlsToStore {
-		AddChannelURL(url)
+		cus.AddChannelURL(url)
 	}
 	return nil
 }

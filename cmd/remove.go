@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/JonathanGzzBen/streamerslive/pkg/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +17,7 @@ var removeCmd = &cobra.Command{
 	Short: "Removes a channel from list",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		cURLs, err := storage.ChannelURLs()
+		cURLs, err := channelsStorage.ChannelURLs()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, `No channels stored. Use command "add" to store a channel`)
 			return
@@ -27,7 +26,7 @@ var removeCmd = &cobra.Command{
 		cleChan := channelsListElementsByName(channelsChan(cURLs...))
 		for cle := range cleChan {
 			if cle.ID == idToRemove {
-				storage.RemoveChannelURL(cle.Channel.URL)
+				channelsStorage.RemoveChannelURL(cle.Channel.URL)
 				fmt.Println(cle.Channel.Name, "removed")
 			}
 		}
