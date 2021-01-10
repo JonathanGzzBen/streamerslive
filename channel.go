@@ -110,7 +110,7 @@ func youtubeChannel(url string) (*Channel, error) {
 }
 
 func twitchChannel(url string, twitchCredentials TwitchAPICredentials) (*Channel, error) {
-	channelName := strings.TrimLeft(url, "https://"+twitchDomain+"/")
+	channelName := strings.TrimPrefix(url, "https://"+twitchDomain+"/")
 	if strings.Contains(channelName, "/") || len(channelName) <= 0 {
 		return nil, ErrInvalidURL
 	}
