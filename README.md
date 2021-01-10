@@ -1,6 +1,10 @@
 # streamerslive
 
-Command-line tool and Go library to fetch streaming channels from Youtube or Twitch.
+streamerslive is a command-line tool that will allow you to register Twitch or Youtube channels,
+so you can check which of them are streaming at the moment.
+
+Also, streamerslive is a Go library that will allow you to check if a streaming channel
+is live, and get information about the stream and the channel.
 
 ## Installation
 
