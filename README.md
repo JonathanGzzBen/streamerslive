@@ -8,7 +8,7 @@ is live, and get information about the stream and the channel.
 
 ## Installation
 
-You can grab a binary from [releases](https://github.com/JonathanGzzBen/streamerslive/releases/tag/v1.0.0).
+You can grab a binary from [releases](https://github.com/JonathanGzzBen/streamerslive/releases/latest).
 
 ## Commands
 
